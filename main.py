@@ -1,9 +1,28 @@
+import os
 import tkinter as tk
 from tkinter import ttk
 from model import Employee
+# extra import
 from tkinter import messagebox
+import json
+import ast
 
-DATA = {}
+if os.stat("workers.txt").st_size == 0:
+    DATA = {}
+else:
+    file = open("workers.txt")
+    contents = file.read()
+    DATA = ast.literal_eval(contents)
+    file.close()
+
+    DATA = {int(k): [str(i) for i in v] for k, v in DATA.items()}
+
+    for item in DATA:
+        DATA[item][3] = float(DATA[item][3])
+        DATA[item][4] = int(DATA[item][4])
+
+
+# DATA = {}
 
 FONT_NAME = "Helvetica"
 FONT_HEADER_SIZE = 14
@@ -21,7 +40,7 @@ LABEL_HEIGHT = 23
 
 MOCK_DATA = {1: ["John", "IT", "Senior Developer", "1500", "40"],
              5: ["Dave", "Logistics", "Manager", "3000", "35"],
-             3: ["Max", "PR", "Team leader", "2000", "40"]}
+             3: ["Max", "PR", "Brand manager", "2000", "40"]}
 
 
 class EmployeeManager(tk.Tk):
@@ -121,6 +140,10 @@ class EmployeeManager(tk.Tk):
         self.btnMockData.place(x=(WIDE_MARGIN + BUTTON_HEIGHT * 5 + COMPONENT_MARGIN * 50), y=285, height=BUTTON_HEIGHT,
                                width=BUTTON_WIDTH * 1.7)
 
+        # loading data from dictionary to tk table
+        for item2 in DATA:
+            self.tableEmployees.insert('', tk.END, values=(
+                int(item2), DATA[item2][0], DATA[item2][1], DATA[item2][2], DATA[item2][3], DATA[item2][4]))
     def selection(self, event):
         self.clear_all()
         item = []
@@ -223,7 +246,13 @@ class EmployeeManager(tk.Tk):
                 self.tableEmployees.insert('', tk.END, values=(
                     item, DATA[item][0], DATA[item][1], DATA[item][2], float(DATA[item][3]), int(DATA[item][4])))
 
+def exiting():
+    with open("workers.txt", "w") as convert_file:
+        convert_file.write(json.dumps(DATA))
+    app.destroy()
+
 
 if __name__ == "__main__":
     app = EmployeeManager()
+    app.protocol("WM_DELETE_WINDOW", exiting)
     app.mainloop()
