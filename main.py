@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 from model import Employee
-# extra import
 from tkinter import messagebox
 
 DATA = {}
@@ -227,6 +226,4 @@ class EmployeeManager(tk.Tk):
 
 if __name__ == "__main__":
     app = EmployeeManager()
-    emp = Employee()
-    print(emp)
     app.mainloop()
