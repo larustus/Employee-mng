@@ -22,7 +22,7 @@ LABEL_HEIGHT = 23
 
 MOCK_DATA = {1: ["John", "IT", "Senior Developer", "1500", "40"],
              5: ["Dave", "Logistics", "Manager", "3000", "35"],
-             3: ["Max", "PR", "idk", "2000", "40"]}
+             3: ["Max", "PR", "Team leader", "2000", "40"]}
 
 
 class EmployeeManager(tk.Tk):
@@ -150,10 +150,8 @@ class EmployeeManager(tk.Tk):
                         str(self.textFiledWorkingHours.get()))
         if DATA.keys().__contains__(empl.id):
             messagebox.showwarning("Employee manager", "This ID is already taken!")
-            # print("Id taken")
         else:
             DATA.update({empl.id: [empl.name, empl.department, empl.title, empl.wage_h, empl.hours_week]})
-            # print(DATA)
             self.tableEmployees.delete(*self.tableEmployees.get_children())
             for item in DATA:
                 self.tableEmployees.insert('', tk.END, values=(
@@ -170,13 +168,13 @@ class EmployeeManager(tk.Tk):
                                                           int(self.textFiledWorkingHours.get())]})
             self.reload_table()
         else:
-            messagebox.showwarning("Employee manager", "Cannot update employee - there is no employee with that ID!")
+            messagebox.showinfo("Employee manager", "Please select the record in the table")
 
     def reload_table(self):
         self.tableEmployees.delete(*self.tableEmployees.get_children())
         for emp in DATA:
             self.tableEmployees.insert('', tk.END, values=(
-                emp, DATA[emp][0], DATA[emp][1], DATA[emp][2], DATA[emp][3], DATA[emp][4]))
+                emp, DATA[emp][0], DATA[emp][1], DATA[emp][2], float(DATA[emp][3]), int(DATA[emp][4])))
 
     def delete_employee(self):
         if not self.is_selected():
@@ -186,11 +184,9 @@ class EmployeeManager(tk.Tk):
             self.tableEmployees.delete(*self.tableEmployees.get_children())
             for item in DATA:
                 self.tableEmployees.insert('', tk.END, values=(
-                    item, DATA[item][0], DATA[item][1], DATA[item][2], DATA[item][3], DATA[item][4]))
+                    int(item), DATA[item][0], DATA[item][1], DATA[item][2], float(DATA[item][3]), int(DATA[item][4])))
         else:
-            messagebox.showwarning("Employee manager", 'Cannot delete employee - there is no employee with that ID!')
-            # print('Cannot delete employee - there is no employee with that ID!')
-        # print(DATA)
+            messagebox.showinfo("Employee manager", "Please select the record in the table")
 
     def clear_all(self):
         self.textFiledId.delete(0, tk.END)
@@ -204,17 +200,31 @@ class EmployeeManager(tk.Tk):
     def reload_all(self):
         pass
 
+    # temporary
     def load_data(self):
-        if DATA.keys().__contains__(1 or 5 or 3):
+        if DATA.keys().__contains__(1) and DATA.keys().__contains__(5) and DATA.keys().__contains__(3):
             messagebox.showwarning("Employee manager", "This ID is already taken!")
-        else:
-            DATA.update(MOCK_DATA)
+
+        if not DATA.keys().__contains__(1):
+            DATA.update({1: ["John", "IT", "Senior Developer", "1500", "40"]})
             self.tableEmployees.delete(*self.tableEmployees.get_children())
             for item in DATA:
                 self.tableEmployees.insert('', tk.END, values=(
                     item, DATA[item][0], DATA[item][1], DATA[item][2], float(DATA[item][3]), int(DATA[item][4])))
-        # print("loadData method invoked")
-        # print(DATA)
+
+        if not DATA.keys().__contains__(5):
+            DATA.update({5: ["Dave", "Logistics", "Manager", "3000", "35"]})
+            self.tableEmployees.delete(*self.tableEmployees.get_children())
+            for item in DATA:
+                self.tableEmployees.insert('', tk.END, values=(
+                    item, DATA[item][0], DATA[item][1], DATA[item][2], float(DATA[item][3]), int(DATA[item][4])))
+
+        if not DATA.keys().__contains__(3):
+            DATA.update({3: ["Max", "PR", "Team leader", "2000", "40"]})
+            self.tableEmployees.delete(*self.tableEmployees.get_children())
+            for item in DATA:
+                self.tableEmployees.insert('', tk.END, values=(
+                    item, DATA[item][0], DATA[item][1], DATA[item][2], float(DATA[item][3]), int(DATA[item][4])))
 
 
 if __name__ == "__main__":
