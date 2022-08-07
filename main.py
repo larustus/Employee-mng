@@ -1,4 +1,5 @@
 import os
+import pickle
 import tkinter as tk
 from tkinter import ttk
 from model import Employee
@@ -7,22 +8,8 @@ from tkinter import messagebox
 import json
 import ast
 
-if os.stat("workers.txt").st_size == 0:
-    DATA = {}
-else:
-    file = open("workers.txt")
-    contents = file.read()
-    DATA = ast.literal_eval(contents)
-    file.close()
 
-    DATA = {int(k): [str(i) for i in v] for k, v in DATA.items()}
-
-    for item in DATA:
-        DATA[item][3] = float(DATA[item][3])
-        DATA[item][4] = int(DATA[item][4])
-
-
-# DATA = {}
+STORAGE_FILE = "workers.db"
 
 FONT_NAME = "Helvetica"
 FONT_HEADER_SIZE = 14
@@ -41,6 +28,7 @@ LABEL_HEIGHT = 23
 MOCK_DATA = {1: ["John", "IT", "Senior Developer", "1500", "40"],
              5: ["Dave", "Logistics", "Manager", "3000", "35"],
              3: ["Max", "PR", "Brand manager", "2000", "40"]}
+DATA = {}
 
 
 class EmployeeManager(tk.Tk):
@@ -138,9 +126,8 @@ class EmployeeManager(tk.Tk):
                                width=BUTTON_WIDTH * 1.7)
 
         # loading data from dictionary to tk table
-        for item2 in DATA:
-            self.tableEmployees.insert('', tk.END, values=(
-                int(item2), DATA[item2][0], DATA[item2][1], DATA[item2][2], DATA[item2][3], DATA[item2][4]))
+        self.load_from_file()
+        self.reload_table()
 
     def register_employee(self):
         empl = Employee(str(self.textFiledName.get()), int(self.textFiledId.get()), str(self.textFiledDepartment.get()),
@@ -153,9 +140,13 @@ class EmployeeManager(tk.Tk):
             DATA.update({empl.id: [empl.name, empl.department, empl.title, empl.wage_h, empl.hours_week]})
             # print(DATA)
             self.tableEmployees.delete(*self.tableEmployees.get_children())
-            for item in DATA:
-                self.tableEmployees.insert('', tk.END, values=(
-                    item, DATA[item][0], DATA[item][1], DATA[item][2], DATA[item][3], DATA[item][4]))
+            self.save_to_file()
+            self.reload_table()
+
+    def reload_table(self):
+        for item in DATA:
+            self.tableEmployees.insert('', tk.END, values=(
+                item, DATA[item][0], DATA[item][1], DATA[item][2], DATA[item][3], DATA[item][4]))
 
     def update_employee(self):
         if DATA.keys().__contains__(int((self.textFiledId.get()))):
@@ -165,10 +156,8 @@ class EmployeeManager(tk.Tk):
                                                        float(self.textFiledWage.get()),
                                                        int(self.textFiledWorkingHours.get())]})
             self.tableEmployees.delete(*self.tableEmployees.get_children())
-            for item in DATA:
-                self.tableEmployees.insert('', tk.END, values=(
-                    item, DATA[item][0], DATA[item][1], DATA[item][2], DATA[item][3], DATA[item][4]))
-
+            self.save_to_file()
+            self.reload_table()
         else:
             messagebox.showwarning("Employee manager", "Cannot update employee - there is no employee with that ID!")
             # print("Cannot update employee - there is no employee with that ID!")
@@ -178,9 +167,8 @@ class EmployeeManager(tk.Tk):
         if DATA.keys().__contains__(int((self.textFiledId.get()))):
             del DATA[int(self.textFiledId.get())]
             self.tableEmployees.delete(*self.tableEmployees.get_children())
-            for item in DATA:
-                self.tableEmployees.insert('', tk.END, values=(
-                    item, DATA[item][0], DATA[item][1], DATA[item][2], DATA[item][3], DATA[item][4]))
+            self.save_to_file()
+            self.reload_table()
         else:
             messagebox.showwarning("Employee manager", 'Cannot delete employee - there is no employee with that ID!')
             # print('Cannot delete employee - there is no employee with that ID!')
@@ -206,20 +194,38 @@ class EmployeeManager(tk.Tk):
         else:
             DATA.update(MOCK_DATA)
             self.tableEmployees.delete(*self.tableEmployees.get_children())
-            for item in DATA:
-                self.tableEmployees.insert('', tk.END, values=(
-                    int(item), DATA[item][0], DATA[item][1], DATA[item][2], float(DATA[item][3]), int(DATA[item][4])))
+            self.save_to_file()
+            self.reload_table()
+
+    def save_to_file(self):
+        print("saving")
+        with open(STORAGE_FILE, 'wb') as convert_file:
+            pickle.dump(DATA, convert_file, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def load_from_file(self):
+        print(MOCK_DATA)
+        DATA = MOCK_DATA
+    #     try:
+    #         if os.path.getsize(STORAGE_FILE) > 0:
+    #             DATA = pickle.load(open(STORAGE_FILE, 'rb'))
+    #         print(DATA)
+    #     except FileNotFoundError:
+    #         DATA = {}
+
 
 
 def exiting():
     with open("workers.txt", "w") as convert_file:
-        convert_file.write(json.dumps(DATA))
-    app.destroy()
+        pickle.dump(DATA, convert_file, protocol=pickle.HIGHEST_PROTOCOL)
 
+
+# with open("workers.txt", "w") as convert_file:
+#    convert_file.write(json.dumps(DATA))
+    app.destroy()
 
 if __name__ == "__main__":
     app = EmployeeManager()
     emp = Employee()
     print(emp)
-    app.protocol("WM_DELETE_WINDOW", exiting)
+    app.protocol("WM_DELETE_WINDOW")  # , exiting)
     app.mainloop()
