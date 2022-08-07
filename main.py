@@ -1,4 +1,5 @@
 import os
+import pickle
 import tkinter as tk
 from tkinter import ttk
 from model import Employee
@@ -7,22 +8,8 @@ from tkinter import messagebox
 import json
 import ast
 
-if os.stat("workers.txt").st_size == 0:
-    DATA = {}
-else:
-    file = open("workers.txt")
-    contents = file.read()
-    DATA = ast.literal_eval(contents)
-    file.close()
 
-    DATA = {int(k): [str(i) for i in v] for k, v in DATA.items()}
-
-    for item in DATA:
-        DATA[item][3] = float(DATA[item][3])
-        DATA[item][4] = int(DATA[item][4])
-
-
-# DATA = {}
+STORAGE_FILE = "workers.db"
 
 FONT_NAME = "Helvetica"
 FONT_HEADER_SIZE = 14
@@ -41,11 +28,10 @@ LABEL_HEIGHT = 23
 MOCK_DATA = {1: ["John", "IT", "Senior Developer", "1500", "40"],
              5: ["Dave", "Logistics", "Manager", "3000", "35"],
              3: ["Max", "PR", "Brand manager", "2000", "40"]}
+DATA = {}
 
 
 class EmployeeManager(tk.Tk):
-    __SELECTED_RECORD_ID = -1
-
     def __init__(self):
         super().__init__()
         self.title("Employee Manager")
@@ -98,7 +84,6 @@ class EmployeeManager(tk.Tk):
         self.tableEmployees.column('#6', width=106, anchor='center', stretch=False)
 
         # Scroll bars definition
-        self.tableEmployees.bind("<<TreeviewSelect>>", self.selection)
 
         # Lbls placement
         self.lblTitle.place(x=TITLE_MARGIN, y=30, height=47, width=300)
@@ -141,30 +126,8 @@ class EmployeeManager(tk.Tk):
                                width=BUTTON_WIDTH * 1.7)
 
         # loading data from dictionary to tk table
-        for item2 in DATA:
-            self.tableEmployees.insert('', tk.END, values=(
-                int(item2), DATA[item2][0], DATA[item2][1], DATA[item2][2], DATA[item2][3], DATA[item2][4]))
-    def selection(self, event):
-        self.clear_all()
-        item = []
-        for selection in self.tableEmployees.selection():
-            item = self.tableEmployees.item(selection)
-        if len(item) != 0:
-            id, name, department, title, wage, working_hours = item["values"][0:7]
-            self.textFiledId.insert(0, id)
-            self.textFiledName.insert(0, name)
-            self.textFiledDepartment.insert(0, department)
-            self.textFiledTitle.insert(0, title)
-            self.textFiledWage.insert(0, wage)
-            self.textFiledWorkingHours.insert(0, working_hours)
-            self.__SELECTED_RECORD_ID = id
-            return id
-        return -1
-
-    def is_selected(self):
-        if self.__SELECTED_RECORD_ID == -1:
-            messagebox.showinfo("Employee manager", "Please select the record in the table")
-        return self.__SELECTED_RECORD_ID != -1
+        self.load_from_file()
+        self.reload_table()
 
     def register_employee(self):
         empl = Employee(str(self.textFiledName.get()), int(self.textFiledId.get()), str(self.textFiledDepartment.get()),
@@ -172,43 +135,51 @@ class EmployeeManager(tk.Tk):
                         str(self.textFiledWorkingHours.get()))
         if DATA.keys().__contains__(empl.id):
             messagebox.showwarning("Employee manager", "This ID is already taken!")
+            # print("Id taken")
         else:
             DATA.update({empl.id: [empl.name, empl.department, empl.title, empl.wage_h, empl.hours_week]})
+            # print(DATA)
             self.tableEmployees.delete(*self.tableEmployees.get_children())
-            for item in DATA:
-                self.tableEmployees.insert('', tk.END, values=(
-                    item, DATA[item][0], DATA[item][1], DATA[item][2], DATA[item][3], DATA[item][4]))
+            self.save_to_file()
+            self.reload_table()
 
     def reload_table(self):
-        self.tableEmployees.delete(*self.tableEmployees.get_children())
-        for emp in DATA:
+        for item in DATA:
             self.tableEmployees.insert('', tk.END, values=(
-                emp, DATA[emp][0], DATA[emp][1], DATA[emp][2], float(DATA[emp][3]), int(DATA[emp][4])))
+                item, DATA[item][0], DATA[item][1], DATA[item][2], DATA[item][3], DATA[item][4]))
 
     def update_employee(self):
-        if not self.is_selected():
-            return
-        if DATA.keys().__contains__(int(self.__SELECTED_RECORD_ID)):
-            DATA.update({int(self.__SELECTED_RECORD_ID): [str(self.textFiledName.get()),
-                                                          str(self.textFiledDepartment.get()),
-                                                          str(self.textFiledTitle.get()),
-                                                          float(self.textFiledWage.get()),
-                                                          int(self.textFiledWorkingHours.get())]})
+        if DATA.keys().__contains__(int((self.textFiledId.get()))):
+            DATA.update({int(self.textFiledId.get()): [str(self.textFiledName.get()),
+                                                       str(self.textFiledDepartment.get()),
+                                                       str(self.textFiledTitle.get()),
+                                                       float(self.textFiledWage.get()),
+                                                       int(self.textFiledWorkingHours.get())]})
+            self.tableEmployees.delete(*self.tableEmployees.get_children())
+            self.save_to_file()
             self.reload_table()
-            self.__SELECTED_RECORD_ID = -1
         else:
-            messagebox.showinfo("Employee manager", "Please select the record in the table")
+            messagebox.showwarning("Employee manager", "Cannot update employee - there is no employee with that ID!")
+            # print("Cannot update employee - there is no employee with that ID!")
+        # print(DATA)
 
     def delete_employee(self):
-        if not self.is_selected():
-            return
-        if DATA.keys().__contains__(int(self.__SELECTED_RECORD_ID)):
-            del DATA[int(self.__SELECTED_RECORD_ID)]
+        if DATA.keys().__contains__(int((self.textFiledId.get()))):
+            del DATA[int(self.textFiledId.get())]
+            self.tableEmployees.delete(*self.tableEmployees.get_children())
+            self.save_to_file()
             self.reload_table()
         else:
-            messagebox.showinfo("Employee manager", "Please select the record in the table")
+            messagebox.showwarning("Employee manager", 'Cannot delete employee - there is no employee with that ID!')
+            # print('Cannot delete employee - there is no employee with that ID!')
+        # print(DATA)
 
     def clear_all(self):
+        DATA.clear()
+        self.tableEmployees.delete(*self.tableEmployees.get_children())
+        # print(DATA)
+
+    def reload_all(self):
         self.textFiledId.delete(0, tk.END)
         self.textFiledName.delete(0, tk.END)
         self.textFiledDepartment.delete(0, tk.END)
@@ -217,42 +188,44 @@ class EmployeeManager(tk.Tk):
         self.textFiledWorkingHours.delete(0, tk.END)
         # print('reloadAll method invoked')
 
-    def reload_all(self):
-        pass
-
-    # temporary
     def load_data(self):
-        if DATA.keys().__contains__(1) and DATA.keys().__contains__(5) and DATA.keys().__contains__(3):
+        if DATA.keys().__contains__(1 and 5 and 3):
             messagebox.showwarning("Employee manager", "This ID is already taken!")
-
-        if not DATA.keys().__contains__(1):
-            DATA.update({1: ["John", "IT", "Senior Developer", "1500", "40"]})
+        else:
+            DATA.update(MOCK_DATA)
             self.tableEmployees.delete(*self.tableEmployees.get_children())
-            for item in DATA:
-                self.tableEmployees.insert('', tk.END, values=(
-                    item, DATA[item][0], DATA[item][1], DATA[item][2], float(DATA[item][3]), int(DATA[item][4])))
+            self.save_to_file()
+            self.reload_table()
 
-        if not DATA.keys().__contains__(5):
-            DATA.update({5: ["Dave", "Logistics", "Manager", "3000", "35"]})
-            self.tableEmployees.delete(*self.tableEmployees.get_children())
-            for item in DATA:
-                self.tableEmployees.insert('', tk.END, values=(
-                    item, DATA[item][0], DATA[item][1], DATA[item][2], float(DATA[item][3]), int(DATA[item][4])))
+    def save_to_file(self):
+        print("saving")
+        with open(STORAGE_FILE, 'wb') as convert_file:
+            pickle.dump(DATA, convert_file, protocol=pickle.HIGHEST_PROTOCOL)
 
-        if not DATA.keys().__contains__(3):
-            DATA.update({3: ["Max", "PR", "Team leader", "2000", "40"]})
-            self.tableEmployees.delete(*self.tableEmployees.get_children())
-            for item in DATA:
-                self.tableEmployees.insert('', tk.END, values=(
-                    item, DATA[item][0], DATA[item][1], DATA[item][2], float(DATA[item][3]), int(DATA[item][4])))
+    def load_from_file(self):
+        print(MOCK_DATA)
+        DATA = MOCK_DATA
+    #     try:
+    #         if os.path.getsize(STORAGE_FILE) > 0:
+    #             DATA = pickle.load(open(STORAGE_FILE, 'rb'))
+    #         print(DATA)
+    #     except FileNotFoundError:
+    #         DATA = {}
+
+
 
 def exiting():
     with open("workers.txt", "w") as convert_file:
-        convert_file.write(json.dumps(DATA))
-    app.destroy()
+        pickle.dump(DATA, convert_file, protocol=pickle.HIGHEST_PROTOCOL)
 
+
+# with open("workers.txt", "w") as convert_file:
+#    convert_file.write(json.dumps(DATA))
+    app.destroy()
 
 if __name__ == "__main__":
     app = EmployeeManager()
-    app.protocol("WM_DELETE_WINDOW", exiting)
+    emp = Employee()
+    print(emp)
+    app.protocol("WM_DELETE_WINDOW")  # , exiting)
     app.mainloop()
