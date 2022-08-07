@@ -1,9 +1,26 @@
+import os
 import tkinter as tk
 from tkinter import ttk
 from model import Employee
 from tkinter import messagebox
+import json
+import ast
 
-DATA = {}
+if os.stat("workers.txt").st_size == 0:
+    DATA = {}
+else:
+    file = open("workers.txt")
+    contents = file.read()
+    DATA = ast.literal_eval(contents)
+    file.close()
+
+    DATA = {int(k): [str(i) for i in v] for k, v in DATA.items()}
+
+    for item in DATA:
+        DATA[item][3] = float(DATA[item][3])
+        DATA[item][4] = int(DATA[item][4])
+
+# DATA = {}
 
 FONT_NAME = "Helvetica"
 FONT_HEADER_SIZE = 14
@@ -121,6 +138,10 @@ class EmployeeManager(tk.Tk):
         self.btnMockData.place(x=(WIDE_MARGIN + BUTTON_HEIGHT * 5 + COMPONENT_MARGIN * 50), y=285, height=BUTTON_HEIGHT,
                                width=BUTTON_WIDTH * 1.7)
 
+        for item2 in DATA:
+            self.tableEmployees.insert('', tk.END, values=(
+                int(item2), DATA[item2][0], DATA[item2][1], DATA[item2][2], DATA[item2][3], DATA[item2][4]))
+
     def selection(self, event):
         self.clear_all()
         item = []
@@ -224,6 +245,13 @@ class EmployeeManager(tk.Tk):
                     item, DATA[item][0], DATA[item][1], DATA[item][2], float(DATA[item][3]), int(DATA[item][4])))
 
 
+def exiting():
+    with open("workers.txt", "w") as convert_file:
+        convert_file.write(json.dumps(DATA))
+    app.destroy()
+
+
 if __name__ == "__main__":
     app = EmployeeManager()
+    app.protocol("WM_DELETE_WINDOW", exiting)
     app.mainloop()
