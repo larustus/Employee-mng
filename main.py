@@ -41,7 +41,7 @@ LABEL_HEIGHT = 23
 
 MOCK_DATA = {1: ["John", "IT", "Senior Developer", "1500", "40"],
              5: ["Dave", "Logistics", "Manager", "3000", "35"],
-             3: ["Max", "PR", "Team leader", "2000", "40"]}
+             3: ["Max", "PR", "Brand manager", "2000", "40"]}
 
 
 class EmployeeManager(tk.Tk):
@@ -177,9 +177,13 @@ class EmployeeManager(tk.Tk):
         else:
             DATA.update({empl.id: [empl.name, empl.department, empl.title, empl.wage_h, empl.hours_week]})
             self.tableEmployees.delete(*self.tableEmployees.get_children())
-            for item in DATA:
-                self.tableEmployees.insert('', tk.END, values=(
-                    item, DATA[item][0], DATA[item][1], DATA[item][2], DATA[item][3], DATA[item][4]))
+            self.save_to_file()
+            self.reload_table()
+
+    def reload_table(self):
+        for item in DATA:
+            self.tableEmployees.insert('', tk.END, values=(
+                item, DATA[item][0], DATA[item][1], DATA[item][2], DATA[item][3], DATA[item][4]))
 
     def reload_table(self):
         self.tableEmployees.delete(*self.tableEmployees.get_children())
