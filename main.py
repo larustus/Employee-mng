@@ -157,6 +157,12 @@ class EmployeeManager(tk.Tk):
                 self.tableEmployees.insert('', tk.END, values=(
                     item, DATA[item][0], DATA[item][1], DATA[item][2], DATA[item][3], DATA[item][4]))
 
+    def reload_table(self):
+        self.tableEmployees.delete(*self.tableEmployees.get_children())
+        for emp in DATA:
+            self.tableEmployees.insert('', tk.END, values=(
+                emp, DATA[emp][0], DATA[emp][1], DATA[emp][2], float(DATA[emp][3]), int(DATA[emp][4])))
+
     def update_employee(self):
         if not self.is_selected():
             return
@@ -167,24 +173,16 @@ class EmployeeManager(tk.Tk):
                                                           float(self.textFiledWage.get()),
                                                           int(self.textFiledWorkingHours.get())]})
             self.reload_table()
+            self.__SELECTED_RECORD_ID = -1
         else:
             messagebox.showinfo("Employee manager", "Please select the record in the table")
-
-    def reload_table(self):
-        self.tableEmployees.delete(*self.tableEmployees.get_children())
-        for emp in DATA:
-            self.tableEmployees.insert('', tk.END, values=(
-                emp, DATA[emp][0], DATA[emp][1], DATA[emp][2], float(DATA[emp][3]), int(DATA[emp][4])))
 
     def delete_employee(self):
         if not self.is_selected():
             return
         if DATA.keys().__contains__(int(self.__SELECTED_RECORD_ID)):
             del DATA[int(self.__SELECTED_RECORD_ID)]
-            self.tableEmployees.delete(*self.tableEmployees.get_children())
-            for item in DATA:
-                self.tableEmployees.insert('', tk.END, values=(
-                    int(item), DATA[item][0], DATA[item][1], DATA[item][2], float(DATA[item][3]), int(DATA[item][4])))
+            self.reload_table()
         else:
             messagebox.showinfo("Employee manager", "Please select the record in the table")
 
