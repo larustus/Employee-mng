@@ -22,6 +22,9 @@ else:
 
 # DATA = {}
 
+
+
+
 FONT_NAME = "Helvetica"
 FONT_HEADER_SIZE = 14
 FONT_REGULAR_SIZE = 10
@@ -138,6 +141,7 @@ class EmployeeManager(tk.Tk):
         self.btnMockData.place(x=(WIDE_MARGIN + BUTTON_HEIGHT * 5 + COMPONENT_MARGIN * 50), y=285, height=BUTTON_HEIGHT,
                                width=BUTTON_WIDTH * 1.7)
 
+
         for item2 in DATA:
             self.tableEmployees.insert('', tk.END, values=(
                 int(item2), DATA[item2][0], DATA[item2][1], DATA[item2][2], DATA[item2][3], DATA[item2][4]))
@@ -197,6 +201,8 @@ class EmployeeManager(tk.Tk):
         else:
             messagebox.showinfo("Employee manager", "Please select the record in the table")
 
+
+
     def delete_employee(self):
         if not self.is_selected():
             return
@@ -205,6 +211,55 @@ class EmployeeManager(tk.Tk):
             self.reload_table()
         else:
             messagebox.showinfo("Employee manager", "Please select the record in the table")
+
+    def clear_all(self):
+        self.textFiledId.delete(0, tk.END)
+        self.textFiledName.delete(0, tk.END)
+        self.textFiledDepartment.delete(0, tk.END)
+        self.textFiledTitle.delete(0, tk.END)
+        self.textFiledWage.delete(0, tk.END)
+        self.textFiledWorkingHours.delete(0, tk.END)
+        # print('reloadAll method invoked')
+
+    def reload_all(self):
+        pass
+
+    # temporary
+    def load_data(self):
+        if DATA.keys().__contains__(1) and DATA.keys().__contains__(5) and DATA.keys().__contains__(3):
+            messagebox.showwarning("Employee manager", "This ID is already taken!")
+
+        if not DATA.keys().__contains__(1):
+            DATA.update({1: ["John", "IT", "Senior Developer", "1500", "40"]})
+            self.tableEmployees.delete(*self.tableEmployees.get_children())
+            for item in DATA:
+                self.tableEmployees.insert('', tk.END, values=(
+                    item, DATA[item][0], DATA[item][1], DATA[item][2], float(DATA[item][3]), int(DATA[item][4])))
+
+        if not DATA.keys().__contains__(5):
+            DATA.update({5: ["Dave", "Logistics", "Manager", "3000", "35"]})
+            self.tableEmployees.delete(*self.tableEmployees.get_children())
+            for item in DATA:
+                self.tableEmployees.insert('', tk.END, values=(
+                    item, DATA[item][0], DATA[item][1], DATA[item][2], float(DATA[item][3]), int(DATA[item][4])))
+
+        if not DATA.keys().__contains__(3):
+            DATA.update({3: ["Max", "PR", "Team leader", "2000", "40"]})
+            self.tableEmployees.delete(*self.tableEmployees.get_children())
+            for item in DATA:
+                self.tableEmployees.insert('', tk.END, values=(
+                    item, DATA[item][0], DATA[item][1], DATA[item][2], float(DATA[item][3]), int(DATA[item][4])))
+
+
+    def delete_employee(self):
+        if not self.is_selected():
+            return
+        if DATA.keys().__contains__(int(self.__SELECTED_RECORD_ID)):
+            del DATA[int(self.__SELECTED_RECORD_ID)]
+            self.reload_table()
+        else:
+            messagebox.showinfo("Employee manager", "Please select the record in the table")
+
 
     def clear_all(self):
         self.textFiledId.delete(0, tk.END)
