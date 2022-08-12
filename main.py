@@ -4,28 +4,10 @@ import tkinter as tk
 from tkinter import ttk
 from model import Employee
 from tkinter import messagebox
-import json
-import ast
 
 STORAGE_FILE = "workers.db"
 
-"""
-if os.stat("workers.txt").st_size == 0:
-    DATA = {}
-else:
-    file = open("workers.txt")
-    contents = file.read()
-    DATA = ast.literal_eval(contents)
-    file.close()
-
-    DATA = {int(k): [str(i) for i in v] for k, v in DATA.items()}
-
-    for item in DATA:
-        DATA[item][3] = float(DATA[item][3])
-        DATA[item][4] = int(DATA[item][4])
-"""
 DATA = {}
-
 
 def load_from_file_():
     if os.path.getsize(STORAGE_FILE) > 0:
@@ -34,7 +16,6 @@ def load_from_file_():
     else:
         temp = {}
         return temp
-
 
 temp_data = load_from_file_()
 
@@ -163,8 +144,12 @@ class EmployeeManager(tk.Tk):
             self.tableEmployees.insert('', tk.END, values=(
                 emp, DATA[emp][0], DATA[emp][1], DATA[emp][2], float(DATA[emp][3]), int(DATA[emp][4])))
 
-    # SELECTING FROM TABLE
+
     def selection(self, event):
+        """
+        Sets selection item and populates all the fields
+        @:return id of selected record, otherwise if no selection, returns -1
+        """
         self.clear_all()
         item = []
         for selection in self.tableEmployees.selection():
