@@ -5,6 +5,8 @@ from tkinter import ttk
 from model import Employee
 from tkinter import messagebox
 
+# Please add some doc comments
+
 STORAGE_FILE = "workers.db"
 
 DATA = {}
