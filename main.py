@@ -1,29 +1,28 @@
 import os
 import pickle
 import tkinter as tk
-from tkinter import ttk
-from model import Employee
 from tkinter import messagebox
+from tkinter import ttk
+
+from jproperties import Properties
+
+from model import Employee
 
 # Please add some doc comments
+config = Properties()
 
-STORAGE_FILE = "workers.db"
 
+def init_config():
+    with open('application.properties', 'rb') as config_file:
+        config.load(config_file)
+
+
+init_config()
+
+STORAGE_FILE = str(config.get("app.storage.fileName").data)
 DATA = {}
 
-def load_from_file_():
-    if os.path.getsize(STORAGE_FILE) > 0:
-        temp = pickle.load(open(STORAGE_FILE, 'rb'))
-        return temp
-    else:
-        temp = {}
-        return temp
-
-temp_data = load_from_file_()
-
-DATA = temp_data
-
-FONT_NAME = "Helvetica"
+FONT_NAME = str(config.get("app.ui.fontType").data)
 FONT_HEADER_SIZE = 14
 FONT_REGULAR_SIZE = 10
 
@@ -37,9 +36,30 @@ BUTTON_HEIGHT = 25
 TEXT_FIELD_HEIGHT = 21
 LABEL_HEIGHT = 23
 
-MOCK_DATA = {1: ["John", "IT", "Senior Developer", "1500", "40"],
-             5: ["Dave", "Logistics", "Manager", "3000", "35"],
-             3: ["Max", "PR", "Team leader", "2000", "40"]}
+MOCK_DATA = {1: ["John", "IT", "Senior Developer", 1500.0, 40],
+             5: ["Dave", "Logistics", "Manager", 3000.0, 35],
+             3: ["Max", "PR", "Team leader", 2000.0, 40]}
+
+
+def load_from_file_():
+    if os.path.getsize(STORAGE_FILE) > 0:
+        temp = pickle.load(open(STORAGE_FILE, 'rb'))
+        return temp
+    else:
+        temp = {}
+        return temp
+
+
+temp_data = load_from_file_()
+DATA = temp_data
+
+x = (str(config.get("app.mode.test").data))
+print(x)
+if x == "False":
+    x = False
+else:
+    x = True
+print(x)
 
 
 class EmployeeManager(tk.Tk):
@@ -47,7 +67,8 @@ class EmployeeManager(tk.Tk):
 
     def __init__(self):
         super().__init__()
-        self.title("Employee Manager")
+        self.textFields = []
+        self.title(str(config.get("app.name").data))
         self.geometry("750x650+350+170")
 
         # Lbls definition
@@ -60,9 +81,13 @@ class EmployeeManager(tk.Tk):
         self.lblWorkingHours = tk.Label(self, text="Working hours: ", font=(FONT_NAME, FONT_REGULAR_SIZE))
 
         # TextFields definition
+
         self.textFiledId = tk.Entry(self)
+        self.textFields.append(self.textFiledId)
         self.textFiledName = tk.Entry(self)
+        self.textFields.append(self.textFiledName)
         self.textFiledDepartment = tk.Entry(self)
+        self.textFields.append(self.textFiledDepartment)
         self.textFiledTitle = tk.Entry(self)
         self.textFiledWage = tk.Entry(self)
         self.textFiledWorkingHours = tk.Entry(self)
@@ -108,19 +133,89 @@ class EmployeeManager(tk.Tk):
         self.lblWage.place(x=LEFT_MARGIN, y=183, height=LABEL_HEIGHT, width=99)
         self.lblWorkingHours.place(x=LEFT_MARGIN, y=220, height=LABEL_HEIGHT, width=200)
 
+        # Initial inputs in text fields
+        def initial_input_id(e):
+            self.textFiledId.delete(0, "end")
+
+        def initial_input_name(e):
+            self.textFiledName.delete(0, "end")
+
+        def initial_input_department(e):
+            self.textFiledDepartment.delete(0, "end")
+
+        def initial_input_title(e):
+            self.textFiledTitle.delete(0, "end")
+
+        def initial_input_wage(e):
+            self.textFiledWage.delete(0, "end")
+
+        def initial_input_hours(e):
+            self.textFiledWorkingHours.delete(0, "end")
+
         # TextFields placement
         self.textFiledId.place(x=LEFT_MARGIN * 5, y=72, height=TEXT_FIELD_HEIGHT,
                                width=(TABLE_WIDTH - ((LEFT_MARGIN * 5) - LEFT_MARGIN)))
+        self.textFiledId.insert(0, "Insert number")
+        self.textFiledId.bind("<FocusIn>", initial_input_id)
+        # self.frame.bind("<Return>",
+        #                 lambda event, a=10, b=20, c=30:
+        #                 self.rand_func(a, b, c))
+        self.textFiledId.bind("<FocusOut>",
+                              lambda event, txf=self.textFiledId, func=self.val_tid: self.validate_text_field(txf,
+                                                                                                              func,
+                                                                                                              event))
+
         self.textFiledName.place(x=LEFT_MARGIN * 5, y=100, height=TEXT_FIELD_HEIGHT,
                                  width=(TABLE_WIDTH - ((LEFT_MARGIN * 5) - LEFT_MARGIN)))
+        self.textFiledName.insert(0, "Insert name")
+        self.textFiledName.bind("<FocusIn>", initial_input_name)
+        self.textFiledName.bind("<FocusOut>",
+                                lambda event, txf=self.textFiledName, func=self.val_name: self.validate_text_field(
+                                    txf,
+                                    func,
+                                    event))
+
         self.textFiledDepartment.place(x=LEFT_MARGIN * 5, y=127, height=TEXT_FIELD_HEIGHT,
                                        width=(TABLE_WIDTH - ((LEFT_MARGIN * 5) - LEFT_MARGIN)))
+        self.textFiledDepartment.insert(0, "Insert name")
+        self.textFiledDepartment.bind("<FocusIn>", initial_input_department)
+        self.textFiledDepartment.bind("<FocusOut>",
+                                      lambda event, txf=self.textFiledDepartment,
+                                             func=self.val_name: self.validate_text_field(
+                                          txf,
+                                          func,
+                                          event))
+
         self.textFiledTitle.place(x=LEFT_MARGIN * 5, y=154, height=TEXT_FIELD_HEIGHT,
                                   width=(TABLE_WIDTH - ((LEFT_MARGIN * 5) - LEFT_MARGIN)))
+        self.textFiledTitle.insert(0, "Insert name")
+        self.textFiledTitle.bind("<FocusIn>", initial_input_title)
+        self.textFiledTitle.bind("<FocusOut>",
+                                 lambda event, txf=self.textFiledTitle,
+                                        func=self.val_title: self.validate_text_field(
+                                     txf,
+                                     func,
+                                     event))
+
         self.textFiledWage.place(x=LEFT_MARGIN * 5, y=181, height=TEXT_FIELD_HEIGHT,
                                  width=(TABLE_WIDTH - ((LEFT_MARGIN * 5) - LEFT_MARGIN)))
+        self.textFiledWage.insert(0, "Insert number")
+        self.textFiledWage.bind("<FocusIn>", initial_input_wage)
+        self.textFiledWage.bind("<FocusOut>",
+                                lambda event, txf=self.textFiledWage, func=self.val_twage: self.validate_text_field(
+                                    txf,
+                                    func,
+                                    event))
+
         self.textFiledWorkingHours.place(x=LEFT_MARGIN * 5, y=218, height=TEXT_FIELD_HEIGHT,
                                          width=(TABLE_WIDTH - ((LEFT_MARGIN * 5) - LEFT_MARGIN)))
+        self.textFiledWorkingHours.insert(0, "Insert number")
+        self.textFiledWorkingHours.bind("<FocusIn>", initial_input_hours)
+        self.textFiledWorkingHours.bind("<FocusOut>",
+                                        lambda event, txf=self.textFiledWorkingHours,
+                                               func=self.val_tfh: self.validate_text_field(txf,
+                                                                                           func,
+                                                                                           event))
 
         # Table placement
         self.tableEmployees.place(x=LEFT_MARGIN, y=340, height=200, width=TABLE_WIDTH)
@@ -138,6 +233,8 @@ class EmployeeManager(tk.Tk):
         # extra button
         self.btnMockData.place(x=(WIDE_MARGIN + BUTTON_HEIGHT * 5 + COMPONENT_MARGIN * 50), y=285, height=BUTTON_HEIGHT,
                                width=BUTTON_WIDTH * 1.7)
+        if x:
+            self.btnMockData.place_forget()
 
         self.reload_table()
 
@@ -146,6 +243,45 @@ class EmployeeManager(tk.Tk):
             self.tableEmployees.insert('', tk.END, values=(
                 emp, DATA[emp][0], DATA[emp][1], DATA[emp][2], float(DATA[emp][3]), int(DATA[emp][4])))
 
+    def val_tid(self):
+        int(self.textFiledId.get())
+
+    def val_name(self):
+        if len(self.textFiledName.get()) != 0:
+            self.textFiledName.config(background="white", foreground="black")
+            return True
+        else:
+            raise ValueError("error")
+
+    def val_twage(self):
+        int(self.textFiledWage.get())
+
+    def val_tfh(self):
+        int(self.textFiledWorkingHours.get())
+
+    def val_dep(self):
+        if len(self.textFiledDepartment.get()) != 0:
+            self.textFiledDepartment.config(background="white", foreground="black")
+            return True
+        else:
+            raise ValueError("error")
+
+    def val_title(self):
+        if len(self.textFiledTitle.get()) != 0:
+            self.textFiledTitle.config(background="white", foreground="black")
+            return True
+        else:
+            raise ValueError("error")
+
+    def validate_text_field(self, text_field, func, event):
+        try:
+            if func is not None:
+                func()
+            text_field.config(background="white", foreground="black")
+            return True
+        except ValueError:
+            text_field.config(background="red", foreground="black")
+            return False
 
     def selection(self, event):
         """
@@ -175,32 +311,65 @@ class EmployeeManager(tk.Tk):
 
     # CRUD
     def register_employee(self):
+        try:
+            if not self.validate(None):
+                raise ValueError("error")
+        except ValueError:
+            messagebox.showinfo("Employee manager", "Wrong inputs in form!")
         empl = Employee(str(self.textFiledName.get()), int(self.textFiledId.get()), str(self.textFiledDepartment.get()),
                         str(self.textFiledTitle.get()), str(self.textFiledWage.get()),
                         str(self.textFiledWorkingHours.get()))
         if DATA.keys().__contains__(empl.id):
-            messagebox.showwarning("Employee manager", "This ID is already taken!")
+            self.textFiledId.config(background="red", foreground="black")
         else:
+            self.textFiledId.config(background="white", foreground="black")
             DATA.update({empl.id: [empl.name, empl.department, empl.title, empl.wage_h, empl.hours_week]})
             self.tableEmployees.delete(*self.tableEmployees.get_children())
             self.reload_table()
             self.save_to_file()
 
+    def validate(self, event):
+        # Exceptions
+        id = self.validate_text_field(self.textFiledId, self.val_tid, None)
+        name = self.validate_text_field(self.textFiledName, self.val_name, None)
+        title = self.validate_textFieldTitle(self.textFiledId, self.val_title, None)
+        department = self.validate_textFieldDepartment(self.textFiledId, self.val_dep, None)
+        wage = self.validate_text_field(self.textFiledWage, self.val_twage, None)
+        hours = self.validate_text_field(self.textFiledWorkingHours, self.val_tfh, None)
+        return id and name and title and department and wage and hours
+
     def update_employee(self):
         if not self.is_selected():
             return
         if DATA.keys().__contains__(int(self.__SELECTED_RECORD_ID)):
-            DATA.update({int(self.__SELECTED_RECORD_ID): [str(self.textFiledName.get()),
-                                                          str(self.textFiledDepartment.get()),
-                                                          str(self.textFiledTitle.get()),
-                                                          float(self.textFiledWage.get()),
-                                                          int(self.textFiledWorkingHours.get())]})
+            try:
+                if not self.validate(None):
+                    raise ValueError("error")
+            except ValueError:
+                messagebox.showinfo("Employee manager", "Wrong inputs in form!")
+            previous_id = self.__SELECTED_RECORD_ID
+            changed_id = int(self.textFiledId.get())
             self.tableEmployees.delete(*self.tableEmployees.get_children())
             self.reload_table()
-            self.save_to_file()
+            if previous_id == changed_id:
+                self.textFiledId.config(background="white", foreground="black")
+                DATA.update({int(self.__SELECTED_RECORD_ID): [str(self.textFiledName.get()),
+                                                              str(self.textFiledDepartment.get()),
+                                                              str(self.textFiledTitle.get()),
+                                                              float(self.textFiledWage.get()),
+                                                              int(self.textFiledWorkingHours.get())]})
+                self.tableEmployees.delete(*self.tableEmployees.get_children())
+                self.reload_table()
+                self.save_to_file()
+            else:
+                self.textFiledId.config(background="red", foreground="black")
+                messagebox.showerror("Employee manager", "Cannot change ID of an employee, use 'register' option "
+                                                         "instead")
             self.__SELECTED_RECORD_ID = -1
         else:
             messagebox.showinfo("Employee manager", "Please select the record in the table")
+        self.tableEmployees.delete(*self.tableEmployees.get_children())
+        self.reload_table()
 
     def delete_employee(self):
         if not self.is_selected():
@@ -215,33 +384,47 @@ class EmployeeManager(tk.Tk):
 
     def clear_all(self):
         self.textFiledId.delete(0, tk.END)
+        self.textFiledId.config(background="white", foreground="black")
         self.textFiledName.delete(0, tk.END)
+        self.textFiledName.config(background="white", foreground="black")
         self.textFiledDepartment.delete(0, tk.END)
+        self.textFiledDepartment.config(background="white", foreground="black")
         self.textFiledTitle.delete(0, tk.END)
+        self.textFiledTitle.config(background="white", foreground="black")
         self.textFiledWage.delete(0, tk.END)
+        self.textFiledWage.config(background="white", foreground="black")
         self.textFiledWorkingHours.delete(0, tk.END)
-        # print('reloadAll method invoked')
+        self.textFiledWorkingHours.config(background="white", foreground="black")
 
     def reload_all(self):
-        pass
+        reload_dict = load_from_file_()
+        DATA.clear()
+        DATA.update(reload_dict)
+        self.tableEmployees.delete(*self.tableEmployees.get_children())
+        self.reload_table()
+        self.save_to_file()
 
     # temporary
     def load_data(self):
+        list_of_keys = list(MOCK_DATA.keys())
+        list_of_values = []
+        for item in MOCK_DATA:
+            list_of_values.append(MOCK_DATA[item])
         if DATA.keys().__contains__(1) and DATA.keys().__contains__(5) and DATA.keys().__contains__(3):
             messagebox.showwarning("Employee manager", "This ID is already taken!")
 
         if not DATA.keys().__contains__(1):
-            DATA.update({1: ["John", "IT", "Senior Developer", "1500", "40"]})
+            DATA.update({list_of_keys[0]: list_of_values[0]})
             self.tableEmployees.delete(*self.tableEmployees.get_children())
             self.reload_table()
             self.save_to_file()
         if not DATA.keys().__contains__(5):
-            DATA.update({5: ["Dave", "Logistics", "Manager", "3000", "35"]})
+            DATA.update({list_of_keys[1]: list_of_values[1]})
             self.tableEmployees.delete(*self.tableEmployees.get_children())
             self.reload_table()
             self.save_to_file()
         if not DATA.keys().__contains__(3):
-            DATA.update({3: ["Max", "PR", "Team leader", "2000", "40"]})
+            DATA.update({list_of_keys[2]: list_of_values[2]})
             self.tableEmployees.delete(*self.tableEmployees.get_children())
             self.reload_table()
             self.save_to_file()
@@ -252,8 +435,6 @@ class EmployeeManager(tk.Tk):
 
 
 def exiting():
-    # with open("workers.txt", "w") as convert_file:
-    #    convert_file.write(json.dumps(DATA))
     with open(STORAGE_FILE, 'wb') as convert_file:
         pickle.dump(DATA, convert_file, protocol=pickle.HIGHEST_PROTOCOL)
     app.destroy()
